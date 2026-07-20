@@ -1,0 +1,16 @@
+.gradle/
+.gradle-user-home/
+.idea/
+.research/
+.research-tools/
+.tools/
+testing/mineflayer/node_modules/
+.vscode/
+build/
+run/
+test-server/
+*.db
+*.db-shm
+*.db-wal
+*.iml
+*.log

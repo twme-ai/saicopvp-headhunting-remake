@@ -1,0 +1,331 @@
+# Values use major currency units. All definitions can be replaced without changing signed, previously minted heads.
+heads:
+  pig:
+    kind: MOB
+    entity: PIG
+    material: PLAYER_HEAD
+    display-key: head.pig
+    value: '10.00'
+    progress-points: 1
+    drop-chance: 1.0
+    minimum-level: 1
+    soul-reward: 0
+    direct-money-reward: '0.00'
+  wolf:
+    kind: MOB
+    entity: WOLF
+    material: PLAYER_HEAD
+    display-key: head.wolf
+    value: '12.00'
+    progress-points: 1
+    drop-chance: 1.0
+    minimum-level: 2
+    soul-reward: 0
+    direct-money-reward: '0.00'
+  ocelot:
+    kind: MOB
+    entity: OCELOT
+    material: PLAYER_HEAD
+    display-key: head.ocelot
+    value: '12.00'
+    progress-points: 1
+    drop-chance: 1.0
+    minimum-level: 2
+    soul-reward: 0
+    direct-money-reward: '0.00'
+  rabbit:
+    kind: MOB
+    entity: RABBIT
+    material: PLAYER_HEAD
+    display-key: head.rabbit
+    value: '14.00'
+    progress-points: 1
+    drop-chance: 1.0
+    minimum-level: 3
+    soul-reward: 0
+    direct-money-reward: '0.00'
+  sheep:
+    kind: MOB
+    entity: SHEEP
+    material: PLAYER_HEAD
+    display-key: head.sheep
+    value: '16.00'
+    progress-points: 1
+    drop-chance: 1.0
+    minimum-level: 4
+    soul-reward: 0
+    direct-money-reward: '0.00'
+  chicken:
+    kind: MOB
+    entity: CHICKEN
+    material: PLAYER_HEAD
+    display-key: head.chicken
+    value: '18.00'
+    progress-points: 1
+    drop-chance: 1.0
+    minimum-level: 5
+    soul-reward: 0
+    direct-money-reward: '0.00'
+  cow:
+    kind: MOB
+    entity: COW
+    material: PLAYER_HEAD
+    display-key: head.cow
+    value: '20.00'
+    progress-points: 1
+    drop-chance: 1.0
+    minimum-level: 6
+    soul-reward: 0
+    direct-money-reward: '40.00'
+  mooshroom:
+    kind: MOB
+    entity: MOOSHROOM
+    material: PLAYER_HEAD
+    display-key: head.mooshroom
+    value: '22.00'
+    progress-points: 1
+    drop-chance: 1.0
+    minimum-level: 6
+    soul-reward: 4
+    direct-money-reward: '0.00'
+  horse:
+    kind: MOB
+    entity: HORSE
+    material: PLAYER_HEAD
+    display-key: head.horse
+    value: '25.00'
+    progress-points: 1
+    drop-chance: 1.0
+    minimum-level: 7
+    soul-reward: 0
+    direct-money-reward: '0.00'
+  silverfish:
+    kind: MOB
+    entity: SILVERFISH
+    material: PLAYER_HEAD
+    display-key: head.silverfish
+    value: '30.00'
+    progress-points: 1
+    drop-chance: 1.0
+    minimum-level: 8
+    soul-reward: 0
+    direct-money-reward: '0.00'
+  slime:
+    kind: MOB
+    entity: SLIME
+    material: PLAYER_HEAD
+    display-key: head.slime
+    value: '35.00'
+    progress-points: 1
+    drop-chance: 1.0
+    minimum-level: 9
+    soul-reward: 0
+    direct-money-reward: '0.00'
+  cave_spider:
+    kind: MOB
+    entity: CAVE_SPIDER
+    material: PLAYER_HEAD
+    display-key: head.cave_spider
+    value: '40.00'
+    progress-points: 1
+    drop-chance: 1.0
+    minimum-level: 10
+    soul-reward: 0
+    direct-money-reward: '0.00'
+  spider:
+    kind: MOB
+    entity: SPIDER
+    material: PLAYER_HEAD
+    display-key: head.spider
+    value: '40.00'
+    progress-points: 1
+    drop-chance: 1.0
+    minimum-level: 10
+    soul-reward: 0
+    direct-money-reward: '0.00'
+  squid:
+    kind: MOB
+    entity: SQUID
+    material: PLAYER_HEAD
+    display-key: head.squid
+    value: '45.00'
+    progress-points: 1
+    drop-chance: 1.0
+    minimum-level: 11
+    soul-reward: 0
+    direct-money-reward: '0.00'
+  zombie:
+    kind: MOB
+    entity: ZOMBIE
+    material: ZOMBIE_HEAD
+    display-key: head.zombie
+    value: '50.00'
+    progress-points: 1
+    drop-chance: 1.0
+    minimum-level: 12
+    soul-reward: 8
+    direct-money-reward: '0.00'
+  skeleton:
+    kind: MOB
+    entity: SKELETON
+    material: SKELETON_SKULL
+    display-key: head.skeleton
+    value: '55.00'
+    progress-points: 1
+    drop-chance: 1.0
+    minimum-level: 13
+    soul-reward: 0
+    direct-money-reward: '80.00'
+  guardian:
+    kind: MOB
+    entity: GUARDIAN
+    material: PLAYER_HEAD
+    display-key: head.guardian
+    value: '65.00'
+    progress-points: 1
+    drop-chance: 1.0
+    minimum-level: 14
+    soul-reward: 0
+    direct-money-reward: '0.00'
+  magma_cube:
+    kind: MOB
+    entity: MAGMA_CUBE
+    material: PLAYER_HEAD
+    display-key: head.magma_cube
+    value: '75.00'
+    progress-points: 1
+    drop-chance: 1.0
+    minimum-level: 15
+    soul-reward: 0
+    direct-money-reward: '0.00'
+  villager:
+    kind: MOB
+    entity: VILLAGER
+    material: PLAYER_HEAD
+    display-key: head.villager
+    value: '85.00'
+    progress-points: 1
+    drop-chance: 1.0
+    minimum-level: 16
+    soul-reward: 0
+    direct-money-reward: '0.00'
+  ghast:
+    kind: MOB
+    entity: GHAST
+    material: PLAYER_HEAD
+    display-key: head.ghast
+    value: '100.00'
+    progress-points: 1
+    drop-chance: 1.0
+    minimum-level: 17
+    soul-reward: 0
+    direct-money-reward: '0.00'
+  zombified_piglin:
+    kind: MOB
+    entity: ZOMBIFIED_PIGLIN
+    material: PIGLIN_HEAD
+    display-key: head.zombified_piglin
+    value: '125.00'
+    progress-points: 1
+    drop-chance: 1.0
+    minimum-level: 18
+    soul-reward: 0
+    direct-money-reward: '175.00'
+  blaze:
+    kind: MOB
+    entity: BLAZE
+    material: PLAYER_HEAD
+    display-key: head.blaze
+    value: '150.00'
+    progress-points: 1
+    drop-chance: 1.0
+    minimum-level: 19
+    soul-reward: 12
+    direct-money-reward: '0.00'
+  witch:
+    kind: MOB
+    entity: WITCH
+    material: PLAYER_HEAD
+    display-key: head.witch
+    value: '175.00'
+    progress-points: 1
+    drop-chance: 1.0
+    minimum-level: 20
+    soul-reward: 0
+    direct-money-reward: '0.00'
+  wither_skeleton:
+    kind: MOB
+    entity: WITHER_SKELETON
+    material: WITHER_SKELETON_SKULL
+    display-key: head.wither_skeleton
+    value: '200.00'
+    progress-points: 1
+    drop-chance: 1.0
+    minimum-level: 21
+    soul-reward: 0
+    direct-money-reward: '0.00'
+  enderman:
+    kind: MOB
+    entity: ENDERMAN
+    material: PLAYER_HEAD
+    display-key: head.enderman
+    value: '250.00'
+    progress-points: 1
+    drop-chance: 1.0
+    minimum-level: 22
+    soul-reward: 0
+    direct-money-reward: '0.00'
+  creeper:
+    kind: MOB
+    entity: CREEPER
+    material: CREEPER_HEAD
+    display-key: head.creeper
+    value: '300.00'
+    progress-points: 1
+    drop-chance: 1.0
+    minimum-level: 23
+    soul-reward: 0
+    direct-money-reward: '0.00'
+  phantom:
+    kind: MOB
+    entity: PHANTOM
+    material: PLAYER_HEAD
+    display-key: head.phantom
+    value: '350.00'
+    progress-points: 1
+    drop-chance: 1.0
+    minimum-level: 24
+    soul-reward: 0
+    direct-money-reward: '0.00'
+  skeleton_horse:
+    kind: MOB
+    entity: SKELETON_HORSE
+    material: SKELETON_SKULL
+    display-key: head.skeleton_horse
+    value: '400.00'
+    progress-points: 1
+    drop-chance: 1.0
+    minimum-level: 25
+    soul-reward: 0
+    direct-money-reward: '0.00'
+  horde:
+    kind: MOB
+    entity: RAVAGER
+    material: PLAYER_HEAD
+    display-key: head.horde
+    value: '0.00'
+    progress-points: 0
+    drop-chance: 0.0
+    minimum-level: 1
+    soul-reward: 0
+    direct-money-reward: '0.00'
+  player:
+    kind: PLAYER
+    material: PLAYER_HEAD
+    display-key: head.player
+    value: '0.00'
+    progress-points: 0
+    drop-chance: 1.0
+    minimum-level: 1
+    soul-reward: 0
+    direct-money-reward: '0.00'

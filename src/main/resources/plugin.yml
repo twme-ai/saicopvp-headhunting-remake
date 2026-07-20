@@ -1,0 +1,48 @@
+name: SaicoPvPHeadhuntingRemake
+version: '${version}'
+main: dev.saicoremake.headhunting.HeadhuntingPlugin
+description: A production-oriented remake of the SaicoPvP HeadHunting progression and economy loop.
+author: twme-ai
+website: https://github.com/twme-ai/saicopvp-headhunting-remake
+api-version: '1.21.11'
+load: POSTWORLD
+
+commands:
+  headhunt:
+    description: Opens and manages HeadHunting.
+    aliases: [heads, hh]
+    usage: /headhunt
+  level:
+    description: Opens the HeadHunting level menu.
+    usage: /level
+  rankup:
+    description: Advances the completed HeadHunting level.
+    usage: /rankup
+
+permissions:
+  headhunting.use:
+    description: Opens HeadHunting menus and views progress.
+    default: true
+  headhunting.sell:
+    description: Sells authentic HeadHunting heads.
+    default: true
+  headhunting.exchange:
+    description: Uses Head Exchange recipes.
+    default: true
+  headhunting.rankup:
+    description: Advances HeadHunting levels.
+    default: true
+  headhunting.language:
+    description: Changes the personal HeadHunting language.
+    default: true
+  headhunting.sign.use:
+    description: Uses HeadHunting sell signs.
+    default: true
+  headhunting.sign.create:
+    description: Creates HeadHunting sell signs.
+    default: op
+  headhunting.admin:
+    description: Uses all HeadHunting administration tools.
+    default: op
+    children:
+      headhunting.sign.create: true

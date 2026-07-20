@@ -1,0 +1,36 @@
+# Exchange rewards are transactionally reserved before physical heads are removed.
+exchanges:
+  basic_mask:
+    display-key: exchange.basic_mask
+    head-costs:
+      pig: 64
+      wolf: 64
+    soul-cost: 0
+    rewards:
+      - id: basic_mask_item
+        type: ITEM
+        value: CARVED_PUMPKIN
+        amount: 1
+  charm:
+    display-key: exchange.charm
+    head-costs:
+      zombie: 256
+      skeleton: 256
+    soul-cost: 1000
+    rewards:
+      - id: charm_item
+        type: ITEM
+        value: TRIPWIRE_HOOK
+        amount: 1
+  legendary_mask:
+    display-key: exchange.legendary_mask
+    head-costs:
+      wither_skeleton: 128
+      enderman: 128
+      creeper: 128
+    soul-cost: 5000
+    rewards:
+      - id: legendary_mask_item
+        type: ITEM
+        value: WITHER_SKELETON_SKULL
+        amount: 1

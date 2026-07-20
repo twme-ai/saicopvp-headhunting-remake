@@ -1,0 +1,192 @@
+# This is a configurable OG-inspired preset. Historical realms and seasons used different values and rewards.
+levels:
+  '1':
+    tier: Basic
+    required-progress: 128
+    rank-up-cost: '25000.00'
+    progress-heads: [pig]
+    unlocks: [pig]
+  '2':
+    tier: Basic
+    required-progress: 192
+    rank-up-cost: '40000.00'
+    progress-heads: [wolf, ocelot]
+    unlocks: [wolf, ocelot]
+  '3':
+    tier: Basic
+    required-progress: 256
+    rank-up-cost: '60000.00'
+    progress-heads: [rabbit]
+    unlocks: [rabbit]
+  '4':
+    tier: Basic
+    required-progress: 320
+    rank-up-cost: '85000.00'
+    progress-heads: [sheep]
+    unlocks: [sheep]
+  '5':
+    tier: Basic
+    required-progress: 384
+    rank-up-cost: '115000.00'
+    progress-heads: [chicken]
+    unlocks: [chicken]
+    rewards:
+      - id: basic_souls
+        type: SOULS
+        amount: 250
+      - id: basic_charm
+        type: ITEM
+        value: TRIPWIRE_HOOK
+        amount: 1
+  '6':
+    tier: Advanced
+    required-progress: 512
+    rank-up-cost: '150000.00'
+    progress-heads: [cow, mooshroom]
+    unlocks: [cow, mooshroom]
+  '7':
+    tier: Advanced
+    required-progress: 640
+    rank-up-cost: '200000.00'
+    progress-heads: [horse]
+    unlocks: [horse]
+  '8':
+    tier: Advanced
+    required-progress: 768
+    rank-up-cost: '275000.00'
+    progress-heads: [silverfish]
+    unlocks: [silverfish]
+  '9':
+    tier: Advanced
+    required-progress: 896
+    rank-up-cost: '350000.00'
+    progress-heads: [slime]
+    unlocks: [slime]
+  '10':
+    tier: Advanced
+    required-progress: 1024
+    rank-up-cost: '450000.00'
+    progress-heads: [cave_spider, spider]
+    unlocks: [cave_spider, spider]
+    rewards:
+      - id: advanced_souls
+        type: SOULS
+        amount: 750
+      - id: advanced_charm
+        type: ITEM
+        value: TRIPWIRE_HOOK
+        amount: 2
+  '11':
+    tier: Extreme
+    required-progress: 1280
+    rank-up-cost: '600000.00'
+    progress-heads: [squid]
+    unlocks: [squid]
+  '12':
+    tier: Extreme
+    required-progress: 1536
+    rank-up-cost: '750000.00'
+    progress-heads: [zombie]
+    unlocks: [zombie]
+  '13':
+    tier: Extreme
+    required-progress: 1792
+    rank-up-cost: '900000.00'
+    progress-heads: [skeleton]
+    unlocks: [skeleton]
+  '14':
+    tier: Extreme
+    required-progress: 2048
+    rank-up-cost: '1100000.00'
+    progress-heads: [guardian]
+    unlocks: [guardian]
+  '15':
+    tier: Extreme
+    required-progress: 2304
+    rank-up-cost: '1350000.00'
+    progress-heads: [magma_cube]
+    unlocks: [magma_cube]
+    rewards:
+      - id: extreme_souls
+        type: SOULS
+        amount: 1500
+      - id: extreme_key
+        type: ITEM
+        value: TRIPWIRE_HOOK
+        amount: 3
+  '16':
+    tier: Elite
+    required-progress: 2560
+    rank-up-cost: '1650000.00'
+    progress-heads: [villager]
+    unlocks: [villager]
+  '17':
+    tier: Elite
+    required-progress: 3072
+    rank-up-cost: '2000000.00'
+    progress-heads: [ghast]
+    unlocks: [ghast]
+  '18':
+    tier: Elite
+    required-progress: 3584
+    rank-up-cost: '2400000.00'
+    progress-heads: [zombified_piglin]
+    unlocks: [zombified_piglin]
+  '19':
+    tier: Elite
+    required-progress: 4096
+    rank-up-cost: '2850000.00'
+    progress-heads: [blaze]
+    unlocks: [blaze]
+  '20':
+    tier: Elite
+    required-progress: 4608
+    rank-up-cost: '3350000.00'
+    progress-heads: [witch]
+    unlocks: [witch]
+    rewards:
+      - id: elite_souls
+        type: SOULS
+        amount: 3000
+      - id: elite_key
+        type: ITEM
+        value: TRIPWIRE_HOOK
+        amount: 5
+  '21':
+    tier: Divine
+    required-progress: 5120
+    rank-up-cost: '3900000.00'
+    progress-heads: [wither_skeleton]
+    unlocks: [wither_skeleton]
+  '22':
+    tier: Divine
+    required-progress: 5760
+    rank-up-cost: '4500000.00'
+    progress-heads: [enderman]
+    unlocks: [enderman]
+  '23':
+    tier: Divine
+    required-progress: 6400
+    rank-up-cost: '5150000.00'
+    progress-heads: [creeper]
+    unlocks: [creeper]
+  '24':
+    tier: Divine
+    required-progress: 7168
+    rank-up-cost: '5850000.00'
+    progress-heads: [phantom]
+    unlocks: [phantom]
+  '25':
+    tier: Divine
+    required-progress: 8192
+    rank-up-cost: '6600000.00'
+    progress-heads: [skeleton_horse]
+    unlocks: [skeleton_horse]
+    rewards:
+      - id: divine_souls
+        type: SOULS
+        amount: 10000
+      - id: divine_trophy
+        type: ITEM
+        value: NETHER_STAR
+        amount: 1

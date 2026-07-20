@@ -1,0 +1,47 @@
+# Runtime mechanics. Configuration reload validates every referenced head, level, and locale before activation.
+mechanics:
+  # SELL_HEADS recreates OG behavior. DIRECT_KILLS recreates the documented 2.0 progression style.
+  progression-mode: SELL_HEADS
+  # Equivalent mob heads minted during this window share a batch and stack normally.
+  batch-window-seconds: 3600
+  maximum-pending-mints: 10000
+  right-click-sells: true
+  sell-signs-enabled: true
+  allowed-spawn-reasons:
+    - NATURAL
+    - SPAWNER
+    - SPAWNER_EGG
+    - BREEDING
+    - REINFORCEMENTS
+  allowed-damage-causes:
+    - ENTITY_ATTACK
+    - ENTITY_SWEEP_ATTACK
+    - PROJECTILE
+    - FIRE
+    - FIRE_TICK
+    - LAVA
+    - ENTITY_EXPLOSION
+
+worlds:
+  # An empty allow list permits every world not listed under blocked.
+  allowed: []
+  blocked: []
+
+player-heads:
+  enabled: true
+  # Historical footage shows a value close to 0.20 in one season. This safer default remains configurable.
+  balance-fraction: '0.10'
+  minimum-victim-balance: '1000.00'
+  maximum-head-value: '1000000.00'
+  # When enabled, the victim's value is escrowed into the signed head at death instead of creating new money.
+  deduct-from-victim: true
+  drop-chance: 1.0
+  killer-victim-cooldown-seconds: 21600
+  victim-cooldown-seconds: 3600
+  block-same-address: true
+
+localization:
+  default-locale: en_US
+  supported-locales:
+    - en_US
+    - zh_TW
