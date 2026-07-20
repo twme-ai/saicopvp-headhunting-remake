@@ -48,12 +48,16 @@ sell every eligible authenticated head. Text alone cannot forge a working sign.
 ## Configuration notes
 
 - `progression-mode` accepts `SELL_HEADS` or `DIRECT_KILLS`.
+- Kill requirements and configured per-head Soul or direct-money rewards apply in both modes. `DIRECT_KILLS` also
+  credits current-level progress immediately; `SELL_HEADS` credits that progress when heads are sold.
 - `allowed-spawn-reasons` and `allowed-damage-causes` are Paper enum names. Unknown values reject the configuration.
 - Empty `worlds.allowed` means every world except `worlds.blocked`.
 - Currency strings have exactly two-decimal precision internally. Avoid changing prices without first testing a copy
   of production configuration.
 - At most 28 levels are supported because the level GUI reserves controls in its 54-slot top inventory.
+- Startup and reload reject a level list shorter than the highest level already stored in player profiles.
 - Every referenced head key, display key, material, entity type, locale, reward, and exchange cost is validated.
+- Mob entity mappings, level reward IDs, and required default-locale keys must be unique and complete.
 - `maximum-pending-mints` bounds durable delivery pressure. Reaching it skips new drops rather than exhausting the
   database queue.
 - `texture-url` is optional. Use a Mojang texture URL value supported by Paper's player-profile property API.
@@ -65,12 +69,14 @@ for the network topology.
 
 ## Rewards and integrations
 
-Supported level and exchange reward types are `MONEY`, `SOULS`, `ITEM`, and `COMMAND`. Item rewards use a durable token
+Supported level and exchange reward types are `BALANCE`, `SOULS`, `ITEM`, and `COMMAND`. `BALANCE` amounts use integer
+minor currency units, so `500` represents `$5.00` in a two-decimal currency. Built-in balance and Soul rewards commit
+inside the rank-up or exchange transaction. Item rewards use a durable token
 so reconnect recovery does not duplicate them. Command rewards are marked delivering before dispatch and therefore
 run at most once, but no plugin can make a console command and this SQLite database one atomic transaction. Prefer the
 built-in reward types for economic state.
 
-There is no built-in Vault bridge in 1.0.0. Use the Bukkit service API and events for integrations that accept the
+There is no built-in Vault bridge in 1.0.1. Use the Bukkit service API and events for integrations that accept the
 documented consistency boundary. Proprietary mask effects and custom horde behavior require another plugin.
 
 ## Backup and restore

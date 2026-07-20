@@ -1,11 +1,11 @@
 # Testing and Validation
 
-The 1.0.0 release was validated on 2026-07-20 with Temurin Java 21.0.11 and Paper 1.21.11 build 132.
+The 1.0.1 release was validated on 2026-07-20 with Temurin Java 21.0.11 and Paper 1.21.11 build 132.
 
 Release JAR SHA-256:
 
 ```text
-0b85c0ccf7dd5720863d54d839bba2bab309829a41b11dbd75d47054d0c147c0
+57341a12a42b94e029e3b6564d6dfafbe4b49dbaaa9b356ae410508144672695
 ```
 
 ## Automated build
@@ -16,19 +16,24 @@ Release JAR SHA-256:
 
 The build treats every Java compiler warning as an error and runs:
 
-- 18 JUnit tests with zero failures and zero errors.
+- 31 JUnit tests with zero failures and zero errors.
 - Configuration resource tests for the 25-level preset and equal `en_US`/`zh_TW` translation key sets.
 - HMAC signature, tamper rejection, key persistence, and missing-key fail-closed tests.
 - SQLite integration tests for mint limits, duplicate-stack rejection, idempotent sale finalization, reservation
-  cancellation, delivery outboxes, player-head escrow and cooldowns, rank-up rewards, and exchange recovery.
+  cancellation, delivery outboxes, player-head escrow and cooldowns, rank-up rewards, exchange recovery, built-in
+  exchange rewards, overflow rollback, and schema v1-to-v2 reward recovery.
+- Policy tests proving that sell mode still records kill requirements and per-kill Soul rewards while direct mode also
+  credits immediate progress.
+- Reload validation tests for atomic settings/translation snapshots, stored-level capacity, required translation keys,
+  duplicate reward IDs, and inaccessible progress heads.
 - Checkstyle for main and test sources with zero warnings.
 - SpotBugs for main and test bytecode.
 
 ## Paper runtime validation
 
-The release JAR was started twice on a clean Paper server. Both starts reached the plugin readiness message, registered
-commands and services, reloaded configuration, reused the generated secret and migrated database, and stopped cleanly.
-The plugin produced no warnings, errors, severe messages, or exceptions.
+The release JAR was started twice on Paper with an existing version 1 database. Both starts reached the plugin readiness
+message, registered commands and services, reloaded configuration, reused the generated secret, migrated the database to
+schema version 2, and stopped cleanly. The plugin produced no warnings, errors, severe messages, or exceptions.
 
 The test environment itself emitted Paper warnings for being executed as root and for 1.21.11 no longer being the
 newest Minecraft line. The controlled Mineflayer test additionally used offline mode. These were server-environment
@@ -48,10 +53,13 @@ The tracked scripts under `testing/mineflayer` pin Mineflayer 4.37.1. Against th
 6. After a full server restart, balance $100.00 and progress 10/128 persisted.
 7. A pig death credited to the bot through Paper's actual `EntityDeathEvent` dropped an authenticated head; its sale
    credited another $10.00 and one progress, ending at $110.00 and 11/128.
+8. In `SELL_HEADS` mode, an unlocked zombie kill credited eight Souls without granting immediate progress, confirming
+   that per-kill rewards are independent from the configured progression mode.
 
-The final death test temporarily permitted the `COMMAND` spawn reason and used Minecraft's `/damage ...
-minecraft:player_attack by HeadTest` command so the test stayed deterministic. This exception was limited to the
-ignored test-server configuration and is not present in the shipped default.
+The death tests temporarily permitted the `COMMAND` spawn reason and used Minecraft's `/damage ...
+minecraft:player_attack by HeadTest` command so the test stayed deterministic. The Soul test also temporarily lowered
+the zombie unlock level for its fresh profile. These exceptions were limited to the ignored test-server configuration,
+were restored after validation, and are not present in the shipped default.
 
 ## Reproducing the bot checks
 

@@ -1,8 +1,9 @@
 # Research and Gameplay Decisions
 
-Research was performed on 2026-07-20 before implementation. The built-in search provider was retried and returned
-`503 auth_not_found`; official pages, repository source, Maven metadata, GitHub APIs, and directly retrieved public
-video metadata and captions remained accessible. Historical captions are imperfect, so gameplay claims from videos
+Research was performed on 2026-07-20 before implementation and repeated during the 1.0.1 hardening audit. The built-in
+search provider was retried again and returned `503 auth_not_found`; official pages, repository source, Maven metadata,
+GitHub APIs, and directly retrieved public video metadata and captions remained accessible. Historical captions are
+imperfect, so gameplay claims from videos
 are treated as observations from a particular realm and season rather than universal rules.
 
 ## Current technical sources
@@ -15,6 +16,8 @@ are treated as observations from a particular realm and season rather than unive
   automatically copy between holders.
 - [Paper scheduler documentation](https://docs.papermc.io/paper/dev/scheduler/) says file and database work should be
   asynchronous and warns that most Bukkit world state is unsafe off the main thread.
+- The [Paper documentation repository](https://github.com/PaperMC/docs) was checked directly after search failed; its
+  Paper development documentation had updates through 2026-07-19 during the maintenance audit.
 - [Paper custom inventory holder documentation](https://docs.papermc.io/paper/dev/custom-inventory-holder/) recommends
   custom `InventoryHolder` implementations instead of inventory-title matching.
 - [Paper database documentation](https://docs.papermc.io/paper/dev/databases/) confirms that Paper bundles the SQLite

@@ -15,8 +15,8 @@ This is an unofficial community project. It is not affiliated with or endorsed b
 
 ## Install
 
-1. Download `SaicoPvP-Headhunting-Remake-1.0.0.jar` from the
-   [v1.0.0 GitHub release](https://github.com/twme-ai/saicopvp-headhunting-remake/releases/tag/v1.0.0).
+1. Download `SaicoPvP-Headhunting-Remake-1.0.1.jar` from the
+   [v1.0.1 GitHub release](https://github.com/twme-ai/saicopvp-headhunting-remake/releases/tag/v1.0.1).
 2. Place it in the server's `plugins` directory.
 3. Start Paper once and wait for `SaicoPvPHeadhuntingRemake is ready` in the console.
 4. Stop the server and review `config.yml`, `heads.yml`, `levels.yml`, and `exchanges.yml` under the generated plugin
@@ -30,7 +30,8 @@ database.
 ## Gameplay
 
 - `SELL_HEADS` mode: eligible mob kills mint signed, tradable heads. Selling the current level's head types advances
-  progress; lower unlocked heads still pay money.
+  progress; lower unlocked heads still pay money. Configured kill requirements, Soul rewards, and direct money
+  rewards are recorded on eligible kills in either progression mode.
 - `DIRECT_KILLS` mode: eligible personal kills advance current-tier progress immediately and can award configured
   money or Souls. Heads remain authenticated economy items.
 - Rank-up checks progress, per-mob kill requirements, and the configured internal-balance cost in one database
@@ -87,7 +88,7 @@ player's inventory are relocalized without changing their signed economic payloa
 ## Integration boundaries
 
 The built-in integer-cent wallet is authoritative because it permits head redemption, player-head escrow, rank-up,
-and rewards to commit atomically. Version 1.0.0 does not include a Vault bridge. Server-specific faction commands,
+and rewards to commit atomically. Version 1.0.1 does not include a Vault bridge. Server-specific faction commands,
 proprietary mask effects, custom horde spawning, faction flight, and head-flip gambling are intentionally outside the
 portable core. Exchange items, command rewards, Bukkit events, and the public service API provide integration points.
 Command rewards are at-most-once but cannot be crash-atomic with another plugin.
@@ -103,6 +104,6 @@ proprietary masks.
 ```
 
 The build compiles with Java 21 `-Xlint:all -Werror`, runs JUnit integration tests, Checkstyle, and SpotBugs. See
-[testing](docs/TESTING.md) for the Paper and Mineflayer validation procedure and recorded v1.0.0 results.
+[testing](docs/TESTING.md) for the Paper and Mineflayer validation procedure and recorded v1.0.1 results.
 
 The API is described in [docs/API.md](docs/API.md). This project is available under the [MIT License](LICENSE).
