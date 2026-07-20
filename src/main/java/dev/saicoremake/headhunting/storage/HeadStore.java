@@ -69,6 +69,16 @@ public final class HeadStore {
         return database.submit(connection -> readProfile(connection, playerId));
     }
 
+    public CompletableFuture<Integer> findMaximumProfileLevel() {
+        return database.submit(connection -> {
+            try (PreparedStatement statement = connection.prepareStatement(
+                    "SELECT COALESCE(MAX(level), 1) FROM profiles"
+            ); ResultSet result = statement.executeQuery()) {
+                return result.next() ? result.getInt(1) : 1;
+            }
+        });
+    }
+
     public CompletableFuture<PlayerProfile> setLocaleOverride(UUID playerId, Locale localeOverride) {
         return database.submit(connection -> {
             try (PreparedStatement statement = connection.prepareStatement("""
@@ -308,15 +318,18 @@ public final class HeadStore {
                     requireOneRow(statement.executeUpdate(), "Reserved batch quantity is inconsistent");
                 }
             }
+            PlayerProfile current = readProfile(transaction, sale.playerId());
+            long newBalance = Math.addExact(current.balance().minorUnits(), sale.grossMinor());
+            long newProgress = Math.addExact(current.progress(), sale.progressDelta());
             try (PreparedStatement profile = transaction.prepareStatement("""
                     UPDATE profiles SET
-                        balance_minor = balance_minor + ?,
-                        progress = progress + ?,
+                        balance_minor = ?,
+                        progress = ?,
                         updated_at = ?
                     WHERE player_uuid = ?
                     """)) {
-                profile.setLong(1, sale.grossMinor());
-                profile.setLong(2, sale.progressDelta());
+                profile.setLong(1, newBalance);
+                profile.setLong(2, newProgress);
                 profile.setLong(3, clock.millis());
                 profile.setString(4, sale.playerId().toString());
                 requireOneRow(profile.executeUpdate(), "Sale profile does not exist");
@@ -403,17 +416,9 @@ public final class HeadStore {
             for (StoredSaleLine line : readStoredExchangeLines(transaction, exchangeId)) {
                 consumeReservedBatch(transaction, line);
             }
-            PlayerProfile profile = readProfile(transaction, exchange.playerId());
-            String rewardKey = "exchange:" + exchangeId + ":" + exchange.reward().id();
-            insertRewardOutbox(
-                    transaction,
-                    exchange.playerId(),
-                    profile.level(),
-                    exchange.reward(),
-                    rewardKey
-            );
+            applyExchangeReward(transaction, exchangeId, exchange);
             updateExchangeStatus(transaction, exchangeId, "FINALIZED");
-            return profile;
+            return readProfile(transaction, exchange.playerId());
         }));
     }
 
@@ -429,10 +434,12 @@ public final class HeadStore {
             for (StoredSaleLine line : readStoredExchangeLines(transaction, exchangeId)) {
                 releaseReservedBatch(transaction, line);
             }
+            PlayerProfile current = readProfile(transaction, exchange.playerId());
+            long restoredSouls = Math.addExact(current.souls(), exchange.soulCost());
             try (PreparedStatement statement = transaction.prepareStatement("""
-                    UPDATE profiles SET souls = souls + ?, updated_at = ? WHERE player_uuid = ?
+                    UPDATE profiles SET souls = ?, updated_at = ? WHERE player_uuid = ?
                     """)) {
-                statement.setLong(1, exchange.soulCost());
+                statement.setLong(1, restoredSouls);
                 statement.setLong(2, clock.millis());
                 statement.setString(3, exchange.playerId().toString());
                 requireOneRow(statement.executeUpdate(), "Exchange profile does not exist");
@@ -518,14 +525,17 @@ public final class HeadStore {
             if (inserted == 0) {
                 return new ProgressUpdate(false, current);
             }
+            long newProgress = Math.addExact(current.progress(), progress);
+            long newSouls = Math.addExact(current.souls(), souls);
+            long newBalance = Math.addExact(current.balance().minorUnits(), money.minorUnits());
             try (PreparedStatement statement = transaction.prepareStatement("""
                     UPDATE profiles SET
-                        progress = progress + ?, souls = souls + ?, balance_minor = balance_minor + ?, updated_at = ?
+                        progress = ?, souls = ?, balance_minor = ?, updated_at = ?
                     WHERE player_uuid = ?
                     """)) {
-                statement.setLong(1, progress);
-                statement.setLong(2, souls);
-                statement.setLong(3, money.minorUnits());
+                statement.setLong(1, newProgress);
+                statement.setLong(2, newSouls);
+                statement.setLong(3, newBalance);
                 statement.setLong(4, clock.millis());
                 statement.setString(5, playerId.toString());
                 requireOneRow(statement.executeUpdate(), "Progress profile does not exist");
@@ -576,20 +586,21 @@ public final class HeadStore {
                     Math.subtractExact(current.balance().minorUnits(), levelDefinition.rankUpCost().minorUnits()),
                     balanceReward
             );
+            long newSouls = Math.addExact(current.souls(), soulReward);
             try (PreparedStatement statement = transaction.prepareStatement("""
                     UPDATE profiles SET
                         level = level + ?,
                         completed = ?,
                         progress = 0,
                         balance_minor = ?,
-                        souls = souls + ?,
+                        souls = ?,
                         updated_at = ?
                     WHERE player_uuid = ? AND level = ?
                     """)) {
                 statement.setInt(1, levelDefinition.terminal() ? 0 : 1);
                 statement.setInt(2, levelDefinition.terminal() ? 1 : 0);
                 statement.setLong(3, newBalance);
-                statement.setLong(4, soulReward);
+                statement.setLong(4, newSouls);
                 statement.setLong(5, clock.millis());
                 statement.setString(6, playerId.toString());
                 statement.setInt(7, current.level());
@@ -1036,6 +1047,38 @@ public final class HeadStore {
     ) throws SQLException {
         String rewardKey = playerId + ":" + level + ":" + reward.id();
         insertRewardOutbox(connection, playerId, level, reward, rewardKey);
+    }
+
+    private void applyExchangeReward(Connection connection, UUID exchangeId, ExchangeRow exchange)
+            throws SQLException {
+        RewardDefinition reward = exchange.reward();
+        if (reward.type() == RewardType.ITEM || reward.type() == RewardType.COMMAND) {
+            PlayerProfile profile = readProfile(connection, exchange.playerId());
+            String rewardKey = "exchange:" + exchangeId + ":" + reward.id();
+            insertRewardOutbox(connection, exchange.playerId(), profile.level(), reward, rewardKey);
+            return;
+        }
+        PlayerProfile profile = readProfile(connection, exchange.playerId());
+        String column;
+        long current;
+        if (reward.type() == RewardType.BALANCE) {
+            column = "balance_minor";
+            current = profile.balance().minorUnits();
+        } else if (reward.type() == RewardType.SOULS) {
+            column = "souls";
+            current = profile.souls();
+        } else {
+            throw new IllegalStateException("Unknown exchange reward type: " + reward.type());
+        }
+        long updated = Math.addExact(current, reward.amount());
+        try (PreparedStatement statement = connection.prepareStatement(
+                "UPDATE profiles SET " + column + " = ?, updated_at = ? WHERE player_uuid = ?"
+        )) {
+            statement.setLong(1, updated);
+            statement.setLong(2, clock.millis());
+            statement.setString(3, exchange.playerId().toString());
+            requireOneRow(statement.executeUpdate(), "Exchange reward profile does not exist");
+        }
     }
 
     private void insertRewardOutbox(

@@ -1,9 +1,9 @@
 package dev.saicoremake.headhunting.locale;
 
+import dev.saicoremake.headhunting.config.RuntimeConfiguration;
 import java.text.NumberFormat;
 import java.util.Locale;
 import java.util.Objects;
-import java.util.concurrent.atomic.AtomicReference;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
@@ -11,18 +11,14 @@ import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 
 public final class TranslationService {
     private final MiniMessage miniMessage = MiniMessage.miniMessage();
-    private final AtomicReference<TranslationBundle> current;
+    private final RuntimeConfiguration runtime;
 
-    public TranslationService(TranslationBundle initialBundle) {
-        current = new AtomicReference<>(Objects.requireNonNull(initialBundle, "initialBundle"));
-    }
-
-    public void replace(TranslationBundle newBundle) {
-        current.set(Objects.requireNonNull(newBundle, "newBundle"));
+    public TranslationService(RuntimeConfiguration runtime) {
+        this.runtime = Objects.requireNonNull(runtime, "runtime");
     }
 
     public Component render(Locale locale, String key, TagResolver... resolvers) {
-        TranslationBundle bundle = current.get();
+        TranslationBundle bundle = runtime.current().translations();
         String template = bundle.forLocale(locale).get(key);
         if (template == null) {
             template = bundle.translations().get(bundle.defaultLocale()).get(key);

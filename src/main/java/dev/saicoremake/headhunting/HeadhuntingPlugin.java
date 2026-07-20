@@ -8,6 +8,7 @@ import dev.saicoremake.headhunting.config.ConfigurationLoader;
 import dev.saicoremake.headhunting.config.ConfigurationService;
 import dev.saicoremake.headhunting.config.PluginSettings;
 import dev.saicoremake.headhunting.config.ReloadService;
+import dev.saicoremake.headhunting.config.RuntimeConfiguration;
 import dev.saicoremake.headhunting.gui.HeadMenuService;
 import dev.saicoremake.headhunting.item.HeadItemCodec;
 import dev.saicoremake.headhunting.listener.DeathListener;
@@ -33,6 +34,7 @@ import dev.saicoremake.headhunting.storage.SqliteDatabase;
 import java.nio.file.Path;
 import java.time.Clock;
 import java.util.Objects;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -48,9 +50,15 @@ public final class HeadhuntingPlugin extends JavaPlugin {
     private ExecutorService bootstrapExecutor;
     private CompletableFuture<BootstrapData> bootstrapFuture;
     private volatile SqliteDatabase database;
+    private final Object databaseLifecycle = new Object();
+    private boolean stopping;
 
     @Override
     public void onEnable() {
+        synchronized (databaseLifecycle) {
+            stopping = false;
+            database = null;
+        }
         installStartupCommands();
         try {
             configurationLoader.installDefaults(this);
@@ -66,10 +74,18 @@ public final class HeadhuntingPlugin extends JavaPlugin {
         });
         Path dataDirectory = getDataFolder().toPath();
         bootstrapFuture = CompletableFuture.supplyAsync(() -> loadBootstrapData(dataDirectory), bootstrapExecutor)
-                .thenCompose(data -> data.database().start().thenApply(ignored -> data));
+                .thenCompose(data -> data.database().start().thenCompose(ignored ->
+                        new HeadStore(data.database(), Clock.systemUTC()).findMaximumProfileLevel()
+                                .thenApply(maximumLevel -> {
+                                    ReloadService.validateLevelCapacity(data.settings(), maximumLevel);
+                                    return data;
+                                })
+                ));
         bootstrapFuture.whenComplete((data, failure) -> {
             if (failure != null) {
-                scheduleBootstrapFailure(failure);
+                if (!isStopping()) {
+                    scheduleBootstrapFailure(failure);
+                }
             } else if (isEnabled()) {
                 getServer().getScheduler().runTask(this, () -> initialize(data));
             }
@@ -79,11 +95,15 @@ public final class HeadhuntingPlugin extends JavaPlugin {
     @Override
     public void onDisable() {
         getServer().getServicesManager().unregisterAll(this);
+        SqliteDatabase currentDatabase;
+        synchronized (databaseLifecycle) {
+            stopping = true;
+            currentDatabase = database;
+        }
         CompletableFuture<BootstrapData> future = bootstrapFuture;
         if (future != null && !future.isDone()) {
             future.cancel(false);
         }
-        SqliteDatabase currentDatabase = database;
         if (currentDatabase != null) {
             currentDatabase.close();
         }
@@ -109,7 +129,17 @@ public final class HeadhuntingPlugin extends JavaPlugin {
                     databasePath
             );
             SqliteDatabase newDatabase = new SqliteDatabase(databasePath, getLogger());
-            database = newDatabase;
+            boolean rejected;
+            synchronized (databaseLifecycle) {
+                rejected = stopping;
+                if (!rejected) {
+                    database = newDatabase;
+                }
+            }
+            if (rejected) {
+                newDatabase.close();
+                throw new CancellationException("Plugin stopped during HeadHunting bootstrap");
+            }
             return new BootstrapData(settings, translations, secret, newDatabase);
         } catch (Exception exception) {
             throw new IllegalStateException("HeadHunting bootstrap failed", exception);
@@ -121,8 +151,9 @@ public final class HeadhuntingPlugin extends JavaPlugin {
             return;
         }
         try {
-            ConfigurationService configuration = new ConfigurationService(data.settings());
-            TranslationService translations = new TranslationService(data.translations());
+            RuntimeConfiguration runtime = new RuntimeConfiguration(data.settings(), data.translations());
+            ConfigurationService configuration = new ConfigurationService(runtime);
+            TranslationService translations = new TranslationService(runtime);
             HeadStore store = new HeadStore(data.database(), Clock.systemUTC());
             PlayerSessionService sessions = new PlayerSessionService(store, configuration);
             HeadSigner signer = new HeadSigner(data.secret());
@@ -166,9 +197,10 @@ public final class HeadhuntingPlugin extends JavaPlugin {
                     getDataFolder().toPath(),
                     configurationLoader,
                     translationLoader,
-                    configuration,
-                    translations,
-                    bootstrapExecutor
+                    runtime,
+                    store,
+                    bootstrapExecutor,
+                    command -> getServer().getScheduler().runTask(this, command)
             );
             registerListeners(
                     configuration,
@@ -252,6 +284,12 @@ public final class HeadhuntingPlugin extends JavaPlugin {
         getLogger().log(Level.SEVERE, "HeadHunting could not start", failure);
         if (isEnabled()) {
             getServer().getScheduler().runTask(this, () -> getServer().getPluginManager().disablePlugin(this));
+        }
+    }
+
+    private boolean isStopping() {
+        synchronized (databaseLifecycle) {
+            return stopping;
         }
     }
 

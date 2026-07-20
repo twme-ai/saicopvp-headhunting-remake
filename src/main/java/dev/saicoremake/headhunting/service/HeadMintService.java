@@ -8,8 +8,6 @@ import dev.saicoremake.headhunting.config.PlayerHeadSettings;
 import dev.saicoremake.headhunting.config.PluginSettings;
 import dev.saicoremake.headhunting.domain.HeadDefinition;
 import dev.saicoremake.headhunting.domain.HeadKind;
-import dev.saicoremake.headhunting.domain.Money;
-import dev.saicoremake.headhunting.domain.ProgressionMode;
 import dev.saicoremake.headhunting.item.HeadItemCodec;
 import dev.saicoremake.headhunting.locale.TranslationService;
 import dev.saicoremake.headhunting.security.BatchIds;
@@ -22,6 +20,7 @@ import dev.saicoremake.headhunting.storage.MintBatch;
 import dev.saicoremake.headhunting.storage.PendingDelivery;
 import dev.saicoremake.headhunting.storage.PlayerHeadMintResult;
 import dev.saicoremake.headhunting.storage.PlayerHeadMintStatus;
+import dev.saicoremake.headhunting.storage.ProgressUpdate;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.time.Clock;
@@ -102,7 +101,7 @@ public final class HeadMintService {
         if (definition == null) {
             return;
         }
-        processDirectProgress(killer, definition);
+        processKillCredit(killer, definition);
         if (ThreadLocalRandom.current().nextDouble() >= definition.dropChance()) {
             return;
         }
@@ -225,32 +224,27 @@ public final class HeadMintService {
         return enqueueMint(recipient, new MintBatch(payload, quantity), target, null);
     }
 
-    private void processDirectProgress(Player killer, HeadDefinition definition) {
+    private void processKillCredit(Player killer, HeadDefinition definition) {
         PluginSettings settings = configuration.current();
-        if (settings.progressionMode() != ProgressionMode.DIRECT_KILLS) {
-            return;
-        }
         UUID eventId = UUID.randomUUID();
         UUID killerId = killer.getUniqueId();
         sessions.ensureLoaded(killer).thenCompose(profile -> {
-            boolean eligible = !profile.completed()
-                    && settings.level(profile.level()).progressHeadKeys().contains(definition.key());
-            long progress = eligible ? definition.progressPoints() : 0;
-            long souls = profile.level() >= definition.minimumLevel() ? definition.soulReward() : 0;
-            Money money = profile.level() >= definition.minimumLevel()
-                    ? definition.directMoneyReward() : Money.ZERO;
+            KillCredit credit = KillCreditPolicy.calculate(settings, profile, definition);
+            if (!credit.recordsEvent()) {
+                return CompletableFuture.completedFuture(new ProgressUpdate(false, profile));
+            }
             return store.applyProgressEvent(
                     eventId,
                     profile.playerId(),
-                    "DIRECT_KILL",
+                    "MOB_KILL",
                     definition.key(),
-                    progress,
-                    souls,
-                    money
+                    credit.progress(),
+                    credit.souls(),
+                    credit.money()
             );
         }).whenComplete((update, failure) -> {
             if (failure != null) {
-                reportFailure(killerId, "Could not apply direct-kill progress", failure);
+                reportFailure(killerId, "Could not apply mob kill credit", failure);
             } else {
                 sessions.update(update.profile());
             }

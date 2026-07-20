@@ -4,9 +4,11 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
 
 final class DatabaseMigrations {
-    static final int CURRENT_VERSION = 1;
+    static final int CURRENT_VERSION = 2;
 
     private DatabaseMigrations() {
     }
@@ -23,6 +25,10 @@ final class DatabaseMigrations {
         }
         if (version == 0) {
             applyVersionOne(connection);
+            version = 1;
+        }
+        if (version == 1) {
+            applyVersionTwo(connection);
         }
     }
 
@@ -189,5 +195,92 @@ final class DatabaseMigrations {
         } finally {
             connection.setAutoCommit(originalAutoCommit);
         }
+    }
+
+    private static void applyVersionTwo(Connection connection) throws SQLException {
+        boolean originalAutoCommit = connection.getAutoCommit();
+        connection.setAutoCommit(false);
+        try {
+            List<BuiltInReward> rewards = readUndeliveredBuiltInRewards(connection);
+            long now = System.currentTimeMillis();
+            for (BuiltInReward reward : rewards) {
+                applyBuiltInReward(connection, reward, now);
+            }
+            try (Statement statement = connection.createStatement()) {
+                statement.executeUpdate("INSERT INTO schema_version(version) VALUES (2)");
+            }
+            connection.commit();
+        } catch (SQLException | RuntimeException exception) {
+            connection.rollback();
+            throw exception;
+        } finally {
+            connection.setAutoCommit(originalAutoCommit);
+        }
+    }
+
+    private static List<BuiltInReward> readUndeliveredBuiltInRewards(Connection connection) throws SQLException {
+        List<BuiltInReward> rewards = new ArrayList<>();
+        try (var statement = connection.prepareStatement("""
+                SELECT reward_key, player_uuid, reward_type, reward_amount
+                FROM reward_outbox
+                WHERE reward_type IN ('BALANCE', 'SOULS') AND status <> 'COMPLETED'
+                ORDER BY created_at, reward_key
+                """); var result = statement.executeQuery()) {
+            while (result.next()) {
+                rewards.add(new BuiltInReward(
+                        result.getString("reward_key"),
+                        result.getString("player_uuid"),
+                        result.getString("reward_type"),
+                        result.getLong("reward_amount")
+                ));
+            }
+        }
+        return List.copyOf(rewards);
+    }
+
+    private static void applyBuiltInReward(Connection connection, BuiltInReward reward, long now)
+            throws SQLException {
+        if (reward.amount() < 0) {
+            throw new SQLException("Built-in reward amount cannot be negative: " + reward.rewardKey());
+        }
+        String column = reward.type().equals("BALANCE") ? "balance_minor" : "souls";
+        long current;
+        try (var statement = connection.prepareStatement(
+                "SELECT " + column + " FROM profiles WHERE player_uuid = ?"
+        )) {
+            statement.setString(1, reward.playerId());
+            try (var result = statement.executeQuery()) {
+                if (!result.next()) {
+                    throw new SQLException("Reward profile does not exist: " + reward.playerId());
+                }
+                current = result.getLong(1);
+            }
+        }
+        long updated;
+        try {
+            updated = Math.addExact(current, reward.amount());
+        } catch (ArithmeticException exception) {
+            throw new SQLException("Built-in reward would overflow profile counter", exception);
+        }
+        try (var statement = connection.prepareStatement(
+                "UPDATE profiles SET " + column + " = ?, updated_at = ? WHERE player_uuid = ?"
+        )) {
+            statement.setLong(1, updated);
+            statement.setLong(2, now);
+            statement.setString(3, reward.playerId());
+            statement.executeUpdate();
+        }
+        try (var statement = connection.prepareStatement("""
+                UPDATE reward_outbox
+                SET status = 'COMPLETED', last_error = NULL, updated_at = ?
+                WHERE reward_key = ?
+                """)) {
+            statement.setLong(1, now);
+            statement.setString(2, reward.rewardKey());
+            statement.executeUpdate();
+        }
+    }
+
+    private record BuiltInReward(String rewardKey, String playerId, String type, long amount) {
     }
 }

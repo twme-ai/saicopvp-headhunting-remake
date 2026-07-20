@@ -62,19 +62,23 @@ public final class SellSignListener implements Listener {
         }
         event.line(0, translations.render(sessions.locale(player), "sell.sign-line-one"));
         event.line(1, translations.render(sessions.locale(player), "sell.sign-line-two"));
-        player.sendMessage(translations.render(sessions.locale(player), "sell.sign-created"));
         org.bukkit.block.Block block = event.getBlock();
         org.bukkit.block.sign.Side signSide = event.getSide();
         Component lineOne = translations.render(sessions.locale(player), "sell.sign-line-one");
         Component lineTwo = translations.render(sessions.locale(player), "sell.sign-line-two");
         plugin.getServer().getScheduler().runTask(plugin, () -> {
+            if (event.isCancelled() || !lineOne.equals(event.line(0)) || !lineTwo.equals(event.line(1))) {
+                return;
+            }
             if (block.getState() instanceof Sign sign) {
                 sign.getPersistentDataContainer().set(signKey, PersistentDataType.BOOLEAN, true);
                 SignSide side = sign.getSide(signSide);
                 side.line(0, lineOne);
                 side.line(1, lineTwo);
                 sign.setWaxed(true);
-                sign.update(true, false);
+                if (sign.update(true, false)) {
+                    player.sendMessage(translations.render(sessions.locale(player), "sell.sign-created"));
+                }
             }
         });
     }

@@ -53,6 +53,7 @@ public final class ConfigurationLoader {
         YamlConfiguration main = loadYaml(dataDirectory.resolve("config.yml"));
         Map<String, HeadDefinition> heads = loadHeads(loadYaml(dataDirectory.resolve("heads.yml")));
         List<LevelDefinition> levels = loadLevels(loadYaml(dataDirectory.resolve("levels.yml")), heads);
+        validateHeadLevels(heads, levels.size());
         Map<String, ExchangeRecipe> exchanges = loadExchanges(
                 loadYaml(dataDirectory.resolve("exchanges.yml")),
                 heads
@@ -79,6 +80,10 @@ public final class ConfigurationLoader {
                     .stream().map(ConfigurationLoader::parseLocale).toList();
             Locale defaultLocale = parseLocale(requiredString(main, "localization.default-locale"));
             PlayerHeadSettings playerHeads = loadPlayerHeadSettings(main);
+            if (playerHeads.enabled()
+                    && (heads.get("player") == null || heads.get("player").kind() != HeadKind.PLAYER)) {
+                throw new IllegalArgumentException("Enabled player heads require a PLAYER definition named 'player'");
+            }
             return new PluginSettings(
                     mode,
                     batchWindow,
@@ -104,6 +109,7 @@ public final class ConfigurationLoader {
     private static Map<String, HeadDefinition> loadHeads(YamlConfiguration yaml) throws ConfigurationException {
         ConfigurationSection root = requiredSection(yaml, "heads");
         Map<String, HeadDefinition> definitions = new LinkedHashMap<>();
+        Map<String, String> entityOwners = new LinkedHashMap<>();
         for (String key : root.getKeys(false)) {
             ConfigurationSection section = requiredSection(root, key);
             try {
@@ -133,6 +139,17 @@ public final class ConfigurationLoader {
                         nonNegativeLong(section, "soul-reward"),
                         money(section, "direct-money-reward")
                 );
+                if (definition.displayKey().isBlank()) {
+                    throw new IllegalArgumentException("Display key cannot be blank");
+                }
+                if (entity != null) {
+                    String existing = entityOwners.putIfAbsent(entity.toUpperCase(Locale.ROOT), key);
+                    if (existing != null) {
+                        throw new IllegalArgumentException(
+                                "Entity " + entity + " is already assigned to head '" + existing + "'"
+                        );
+                    }
+                }
                 definitions.put(key, definition);
             } catch (IllegalArgumentException exception) {
                 throw new ConfigurationException("Invalid head '" + key + "': " + exception.getMessage(), exception);
@@ -171,6 +188,13 @@ public final class ConfigurationLoader {
             validateHeadReferences(heads, kills.keySet(), "kill requirement", number);
             validateHeadReferences(heads, progressHeads, "progress head", number);
             validateHeadReferences(heads, unlocks, "unlock", number);
+            for (String headKey : progressHeads) {
+                if (heads.get(headKey).minimumLevel() > number) {
+                    throw new ConfigurationException(
+                            "Progress head '" + headKey + "' is locked until after level " + number
+                    );
+                }
+            }
             List<RewardDefinition> rewards = loadRewards(section, "rewards", "level " + number);
             try {
                 levels.add(new LevelDefinition(
@@ -227,11 +251,15 @@ public final class ConfigurationLoader {
             String context
     ) throws ConfigurationException {
         List<RewardDefinition> rewards = new ArrayList<>();
+        Set<String> rewardIds = new LinkedHashSet<>();
         int index = 0;
         for (Map<?, ?> reward : section.getMapList(path)) {
             index++;
             try {
                 String id = String.valueOf(requiredMapValue(reward, "id"));
+                if (!rewardIds.add(id)) {
+                    throw new IllegalArgumentException("Duplicate reward id: " + id);
+                }
                 RewardType type = enumValue(
                         RewardType.class,
                         String.valueOf(requiredMapValue(reward, "type")),
@@ -362,6 +390,18 @@ public final class ConfigurationLoader {
         for (String key : references) {
             if (!heads.containsKey(key)) {
                 throw new ConfigurationException("Unknown " + kind + " '" + key + "' in " + owner);
+            }
+        }
+    }
+
+    private static void validateHeadLevels(Map<String, HeadDefinition> heads, int levelCount)
+            throws ConfigurationException {
+        for (HeadDefinition definition : heads.values()) {
+            if (definition.minimumLevel() > levelCount) {
+                throw new ConfigurationException(
+                        "Head '" + definition.key() + "' requires level " + definition.minimumLevel()
+                                + " but only " + levelCount + " levels are configured"
+                );
             }
         }
     }

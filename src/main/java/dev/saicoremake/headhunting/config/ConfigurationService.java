@@ -1,20 +1,15 @@
 package dev.saicoremake.headhunting.config;
 
 import java.util.Objects;
-import java.util.concurrent.atomic.AtomicReference;
 
 public final class ConfigurationService {
-    private final AtomicReference<PluginSettings> current;
+    private final RuntimeConfiguration runtime;
 
-    public ConfigurationService(PluginSettings initialSettings) {
-        current = new AtomicReference<>(Objects.requireNonNull(initialSettings, "initialSettings"));
+    public ConfigurationService(RuntimeConfiguration runtime) {
+        this.runtime = Objects.requireNonNull(runtime, "runtime");
     }
 
     public PluginSettings current() {
-        return current.get();
-    }
-
-    public void replace(PluginSettings newSettings) {
-        current.set(Objects.requireNonNull(newSettings, "newSettings"));
+        return runtime.current().settings();
     }
 }
