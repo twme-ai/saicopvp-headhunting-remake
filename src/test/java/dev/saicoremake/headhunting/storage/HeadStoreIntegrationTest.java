@@ -289,4 +289,103 @@ class HeadStoreIntegrationTest {
                 ).join()
         );
     }
+
+    @Test
+    void builtInExchangeRewardsCommitWithoutUsingTheDeliveryOutbox() {
+        ExchangeRecipe balanceRecipe = new ExchangeRecipe(
+                "balance_exchange",
+                "exchange.charm",
+                Map.of("zombie", 1L),
+                0,
+                new RewardDefinition("balance", RewardType.BALANCE, "", 250)
+        );
+        UUID balanceExchange = UUID.randomUUID();
+        store.reserveExchange(
+                balanceExchange,
+                PLAYER_ID,
+                balanceRecipe,
+                List.of(new SaleLine(payload, 1, false))
+        ).join();
+
+        PlayerProfile afterBalance = store.finalizeExchange(balanceExchange).join();
+
+        assertEquals(250, afterBalance.balance().minorUnits());
+        assertEquals(0, store.findPendingRewards(PLAYER_ID).join().size());
+
+        ExchangeRecipe soulRecipe = new ExchangeRecipe(
+                "soul_exchange",
+                "exchange.charm",
+                Map.of("zombie", 1L),
+                0,
+                new RewardDefinition("souls", RewardType.SOULS, "", 75)
+        );
+        UUID soulExchange = UUID.randomUUID();
+        store.reserveExchange(
+                soulExchange,
+                PLAYER_ID,
+                soulRecipe,
+                List.of(new SaleLine(payload, 1, false))
+        ).join();
+
+        PlayerProfile afterSouls = store.finalizeExchange(soulExchange).join();
+
+        assertEquals(75, afterSouls.souls());
+        assertEquals(0, store.findPendingRewards(PLAYER_ID).join().size());
+    }
+
+    @Test
+    void profileCounterOverflowRollsBackTheProgressEvent() {
+        store.applyProgressEvent(
+                UUID.randomUUID(),
+                PLAYER_ID,
+                "TEST_BALANCE_MAX",
+                "zombie",
+                0,
+                0,
+                new Money(Long.MAX_VALUE)
+        ).join();
+
+        assertThrows(
+                CompletionException.class,
+                () -> store.applyProgressEvent(
+                        UUID.randomUUID(),
+                        PLAYER_ID,
+                        "TEST_BALANCE_OVERFLOW",
+                        "zombie",
+                        0,
+                        0,
+                        new Money(1)
+                ).join()
+        );
+        assertEquals(Long.MAX_VALUE, store.findProfile(PLAYER_ID).join().balance().minorUnits());
+    }
+
+    @Test
+    void saleOverflowLeavesTheReservationRecoverable() {
+        store.applyProgressEvent(
+                UUID.randomUUID(),
+                PLAYER_ID,
+                "TEST_BALANCE_MAX",
+                "zombie",
+                0,
+                0,
+                new Money(Long.MAX_VALUE)
+        ).join();
+        UUID saleId = UUID.randomUUID();
+        store.reserveSale(saleId, PLAYER_ID, List.of(new SaleLine(payload, 1, false))).join();
+
+        assertThrows(CompletionException.class, () -> store.finalizeSale(saleId).join());
+
+        assertEquals(Long.MAX_VALUE, store.findProfile(PLAYER_ID).join().balance().minorUnits());
+        assertEquals(1, store.findReservedSales(PLAYER_ID).join().size());
+    }
+
+    @Test
+    void maximumProfileLevelReflectsStoredProfiles() {
+        assertEquals(1, store.findMaximumProfileLevel().join());
+
+        store.setLevel(PLAYER_ID, 12, false).join();
+
+        assertEquals(12, store.findMaximumProfileLevel().join());
+    }
 }
