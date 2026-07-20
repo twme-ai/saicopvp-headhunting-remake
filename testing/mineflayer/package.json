@@ -1,0 +1,14 @@
+{
+  "name": "headhunting-mineflayer-tests",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "smoke": "node smoke.mjs",
+    "persistence": "node persistence.mjs",
+    "kill-flow": "node kill-flow.mjs"
+  },
+  "dependencies": {
+    "mineflayer": "4.37.1"
+  }
+}
